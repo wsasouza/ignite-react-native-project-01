@@ -5,19 +5,42 @@ import {
   StyleSheet,
   TextInput,
   Platform,
-  FlatList  
+  FlatList,  
+  Alert
 } from "react-native";
 import { Button } from "../components/Button";
 import { SkillCard } from "../components/SkillCard";
 
+interface SkillData {
+  id: string;
+  name: string;
+}
+
 export function Home() {
   const [newSkill, setNewSkill] = useState('');
-  const [mySkills, setMySkills] = useState([]);
+  const [mySkills, setMySkills] = useState<SkillData[]>([]);
   const [greeting, setGreeting] = useState('');
 
   function handleAddNewSkill() {
-    setMySkills(oldState => [...oldState, newSkill]);
-    
+    const newSkillFormatted = newSkill.trim();
+
+    if(newSkillFormatted.length > 0){
+      const data = {
+        id: String(new Date().getTime()),
+        name: newSkillFormatted
+      };
+
+      setMySkills(oldState => [...oldState, data]);      
+
+    } else {
+      Alert.alert('Digite a nova habilidade!');
+    }      
+  }
+
+  function handleRemoveSkill(id: string) {
+    setMySkills(oldState => oldState.filter(
+      skill => skill.id !== id
+    ));
   }
 
   useEffect(() => {
@@ -37,11 +60,7 @@ export function Home() {
   return (
     <View style={styles.container}>      
 
-      <Text style={styles.title}>Bem vindo, Walter</Text>
-
-      <Text style={styles.greetings}>
-        {greeting}
-      </Text>
+      <Text style={styles.title}>{greeting}, Walter</Text>      
 
       <TextInput
         style={styles.input}
@@ -50,18 +69,26 @@ export function Home() {
         onChangeText={setNewSkill}         
       />
 
-      <Button onPress={handleAddNewSkill}/>     
+      <Button 
+        onPress={handleAddNewSkill} 
+        activeOpacity={0.7} 
+        title="Adicionar"
+      />     
+
 
       <Text style={[styles.title, { marginVertical: 50 }]}>
-        My Skills
+        Minhas habilidades:
       </Text>
 
       <FlatList
         showsVerticalScrollIndicator={false}
         data={mySkills} 
-        keyExtractor={item => item}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <SkillCard skill={item}/>
+          <SkillCard 
+            skill={item.name}
+            onPress={() => handleRemoveSkill(item.id)}
+          />
         )}      
       />    
 
@@ -73,8 +100,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#121015",
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingHorizontal: 30,
+    paddingVertical: 20,
   },
   title: {
     color: "#fff",
@@ -88,8 +115,5 @@ const styles = StyleSheet.create({
     padding: Platform.OS === "ios" ? 15 : 10,
     marginTop: 30,
     borderRadius: 10,
-  },
-  greetings: {
-   color: "#fff" 
   }
 });
